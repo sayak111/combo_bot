@@ -208,3 +208,5 @@ __marimo__/
 
 #secret key for bot to function
 secrets.toml
+#dah
+unrecognized_cities.txt
