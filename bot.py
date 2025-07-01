@@ -67,6 +67,11 @@ async def get_roles(ctx):
     role_names = [role.name for role in ctx.guild.roles][1:]  # Skip @everyone
     await ctx.send("Roles in this server:\n" + "\n".join(role_names))
 
+@bot.command(name='help')
+@commands.has_permissions(administrator=True)
+async def help(ctx):
+    await ctx.send("commands (admin only):\n !reset_combo_roles \n !listroles")
+
 @reset_combo_roles.error
 @get_roles.error
 async def perms_error(ctx, error):
