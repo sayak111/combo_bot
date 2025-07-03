@@ -98,7 +98,7 @@ async def get_roles(ctx):
 @bot.command(name='sge_help')
 @commands.has_permissions(administrator=True)
 async def sge_help(ctx):
-    await ctx.send("commands (admin only):\n !reset_combo_roles \n !listroles \n !sge_help")
+    await ctx.send("commands (admin only):\n !reset_combo_roles \n !listroles \n !getchannels \n !sge_help")
 
 @sge_help.error
 @reset_combo_roles.error
@@ -106,6 +106,22 @@ async def sge_help(ctx):
 async def perms_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ You need to be an admin to use this command.")
+
+@bot.command(name='getchannels')
+@commands.has_permissions(administrator=True)
+async def get_channels(ctx):
+    channels = ctx.guild.channels
+    channel_list = []
+    for channel in channels:
+        if isinstance(channel, discord.TextChannel):
+            channel_list.append(f"{channel.name} (Text)")
+        elif isinstance(channel, discord.VoiceChannel):
+            channel_list.append(f"{channel.name} (Voice)")
+        elif isinstance(channel, discord.CategoryChannel):
+            channel_list.append(f"{channel.name} (Category)")
+        else:
+            channel_list.append(f"{channel.name} ({type(channel).__name__})")
+    await ctx.send("Channels in this server:\n" + "\n".join(channel_list))
 
 # --------- Run Bot --------- #
 
