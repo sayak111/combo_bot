@@ -2,15 +2,45 @@ import discord
 import datetime
 import logging
 import config
-from typing import Optional
+from typing import Optional, Dict
+import asyncio
+import time
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
 
+# Rate limiting for DoS protection
+RATE_LIMIT_WINDOW = 60  # seconds
+MAX_REQUESTS_PER_WINDOW = 5  # max requests per user per minute
+rate_limit_data: Dict[int, list] = {}  # user_id -> list of timestamps
 
+def is_rate_limited(user_id: int) -> bool:
+    """Check if user is rate limited"""
+    current_time = time.time()
+    
+    # Clean old timestamps
+    if user_id in rate_limit_data:
+        rate_limit_data[user_id] = [
+            ts for ts in rate_limit_data[user_id] 
+            if current_time - ts < RATE_LIMIT_WINDOW
+        ]
+    else:
+        rate_limit_data[user_id] = []
+    
+    # Check if user has exceeded limit
+    if len(rate_limit_data[user_id]) >= MAX_REQUESTS_PER_WINDOW:
+        return True
+    
+    # Add current request
+    rate_limit_data[user_id].append(current_time)
+    return False
 
 # --------- City Role Helpers --------- #
 
 async def assign_city_role(member: discord.Member, guild: discord.Guild, role_name: str) -> str:
+    # Rate limiting check
+    if is_rate_limited(member.id):
+        return f"⏰ {member.mention} Please wait before making another request. Rate limit: {MAX_REQUESTS_PER_WINDOW} requests per {RATE_LIMIT_WINDOW} seconds."
+    
     # Remove any existing city role
     city_role_names = set(config.CITY_ROLES.values())
     roles_to_remove = [role for role in member.roles if role.name in city_role_names]
@@ -35,6 +65,11 @@ async def assign_city_role(member: discord.Member, guild: discord.Guild, role_na
         return f"❌ Role **{role_name}** not found."
 
 async def log_unrecognized_city(member: discord.Member, city_text: str) -> None:
+    # Rate limiting for logging to prevent spam
+    if is_rate_limited(member.id):
+        logging.warning(f"Rate limited logging attempt from {member} for city: {city_text}")
+        return
+        
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {member} (ID: {member.id}): {city_text}"
     
@@ -59,6 +94,21 @@ async def log_unrecognized_city(member: discord.Member, city_text: str) -> None:
 
 
 async def handle_city_selection(message: discord.Message) -> None:
+    # Rate limiting check
+    if is_rate_limited(message.author.id):
+        try:
+            await message.channel.send(
+                f"⏰ {message.author.mention} Please wait before making another request. Rate limit: {MAX_REQUESTS_PER_WINDOW} requests per {RATE_LIMIT_WINDOW} seconds.",
+                delete_after=10
+            )
+        except discord.Forbidden:
+            logging.warning("Cannot send rate limit message to channel.")
+        try:
+            await message.delete()
+        except discord.Forbidden:
+            logging.warning("Cannot delete rate limited message.")
+        return
+
     content = message.content.strip().lower()
     member = message.author
     guild = message.guild
