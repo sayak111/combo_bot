@@ -1,211 +1,171 @@
-# DoS Protection Implementation
+# DoS Protection System
 
-## What is a DoS Attack?
+This Discord bot includes comprehensive protection against various types of denial of service attacks and spam.
 
-A **Denial of Service (DoS) attack** is a cyber attack that floods a system with requests to exhaust resources (CPU, memory, network bandwidth) and make the service unavailable to legitimate users.
+## 🛡️ Protection Features
 
-## DoS Vulnerabilities Identified in Your Bot
+### 1. Rate Limiting
+- **Command Rate Limiting**: Limits how often users can use commands
+- **City Selection Rate Limiting**: Prevents spam in city selection channels
+- **Role Update Rate Limiting**: Protects against rapid role changes
+- **Combo Role Rate Limiting**: Prevents abuse of combo role system
 
-### 1. **Message Flooding Attack**
-- **Vulnerability**: Users can spam messages in city-selection channels
-- **Impact**: Excessive API calls, bot rate limiting, resource exhaustion
-- **Solution**: Rate limiting implemented (5 requests per minute per user)
+### 2. Spam Detection
+- **Repeated Message Detection**: Detects when users send identical messages repeatedly
+- **Message Flood Protection**: Limits total messages per user per minute
+- **Content Analysis**: Tracks message patterns to identify spam
 
-### 2. **Role Assignment Spam**
-- **Vulnerability**: Users can rapidly trigger role assignments
-- **Impact**: Infinite loops, API rate limit exhaustion
-- **Solution**: Rate limiting for role updates (2 updates per 10 seconds per user)
+### 3. Memory Management
+- **Automatic Cleanup**: Removes old rate limit data to prevent memory leaks
+- **Configurable Retention**: Adjustable data retention periods
+- **Statistics Tracking**: Monitor protection effectiveness
 
-### 3. **Command Abuse**
-- **Vulnerability**: Users can spam admin commands
-- **Impact**: Bot overload, Discord API rate limiting
-- **Solution**: Command rate limiting (3 commands per 30 seconds per user)
+## ⚙️ Configuration
 
-### 4. **Logging Spam**
-- **Vulnerability**: Users can flood logging channels
-- **Impact**: Channel spam, storage issues
-- **Solution**: Rate limiting for logging operations
-
-## Implemented Protection Measures
-
-### 1. **Rate Limiting System**
-```python
-# Configuration in config.py
-DOS_PROTECTION = {
-    "CITY_SELECTION_RATE_LIMIT_WINDOW": 60,  # seconds
-    "MAX_CITY_REQUESTS_PER_WINDOW": 5,  # max requests per user per minute
-    
-    "COMMAND_RATE_LIMIT_WINDOW": 30,  # seconds
-    "MAX_COMMANDS_PER_WINDOW": 3,  # max commands per user per 30 seconds
-    
-    "ROLE_UPDATE_RATE_LIMIT_WINDOW": 10,  # seconds
-    "MAX_ROLE_UPDATES_PER_WINDOW": 2,  # max role updates per user per 10 seconds
-}
-```
-
-### 2. **User-Friendly Rate Limit Messages**
-- Clear feedback when users are rate limited
-- Automatic message deletion for rate-limited requests
-- Informative messages about limits
-
-### 3. **Memory Management**
-- Automatic cleanup of old rate limit data
-- Prevention of memory leaks
-- Efficient storage of user activity
-
-### 4. **Error Handling**
-- Graceful handling of Discord API errors
-- Logging of rate limit violations
-- Fallback mechanisms for failed operations
-
-## Protection Features
-
-### **City Selection Protection**
-- Limits city selection requests to 5 per minute per user
-- Prevents spam in city-selection channels
-- Automatic cleanup of old requests
-
-### **Command Protection**
-- Limits admin commands to 3 per 30 seconds per user
-- Prevents command abuse
-- Protects against bot overload
-
-### **Role Update Protection**
-- Limits role updates to 2 per 10 seconds per user
-- Prevents infinite role assignment loops
-- Protects Discord API rate limits
-
-### **Combo Role Protection**
-- Limits combo role updates to 3 per 30 seconds per user
-- Prevents role assignment spam
-- Maintains system stability
-
-## Monitoring and Logging
-
-### **Rate Limit Logging**
-```python
-logging.warning(f"Rate limited {rate_limit_type} for user {user_id}")
-```
-
-### **Statistics Tracking**
-```python
-def get_rate_limit_stats() -> Dict[str, int]:
-    """Get statistics about current rate limiting"""
-```
-
-### **Memory Cleanup**
-```python
-def cleanup_old_data(self, max_age_hours: int = 24):
-    """Clean up old rate limit data to prevent memory leaks"""
-```
-
-## Configuration Options
-
-### **Adjustable Rate Limits**
-You can modify rate limits in `config.py`:
+All protection settings are configurable in `config.py`:
 
 ```python
 DOS_PROTECTION = {
-    "CITY_SELECTION_RATE_LIMIT_WINDOW": 60,  # Increase for more lenient limits
-    "MAX_CITY_REQUESTS_PER_WINDOW": 5,       # Decrease for stricter limits
-    # ... other settings
+    # Rate limiting windows (in seconds)
+    "CITY_SELECTION_RATE_LIMIT_WINDOW": 60,
+    "COMMAND_RATE_LIMIT_WINDOW": 30,
+    "ROLE_UPDATE_RATE_LIMIT_WINDOW": 10,
+    "COMBO_ROLE_UPDATE_RATE_LIMIT_WINDOW": 30,
+    
+    # Maximum requests per window
+    "MAX_CITY_SELECTION_PER_WINDOW": 5,
+    "MAX_COMMANDS_PER_WINDOW": 3,
+    "MAX_ROLE_UPDATES_PER_WINDOW": 2,
+    "MAX_COMBO_ROLE_UPDATES_PER_WINDOW": 3,
+    
+    # Spam detection
+    "SPAM_WINDOW": 60,
+    "MAX_REPEATED_MESSAGES": 3,
+    "MAX_MESSAGES_PER_MINUTE": 10,
+    
+    # Command cooldowns
+    "COMMAND_COOLDOWNS": {
+        "city_selection": 5,
+        "role_updates": 10,
+        "admin_commands": 30,
+    }
 }
 ```
 
-### **Different Limits for Different Actions**
-- **City Selection**: 5 requests per minute
-- **Commands**: 3 commands per 30 seconds
-- **Role Updates**: 2 updates per 10 seconds
-- **Combo Roles**: 3 updates per 30 seconds
+## 🔧 Admin Commands
 
-## Best Practices
+### `!dosstats`
+Shows current DoS protection statistics including:
+- Number of rate-limited users by type
+- Spam detection statistics
+- Active protection data
 
-### **1. Monitor Rate Limit Violations**
-- Check logs regularly for rate limit warnings
-- Adjust limits based on legitimate usage patterns
+### `!cleanup`
+Manually triggers cleanup of old protection data to free memory.
 
-### **2. Regular Cleanup**
-- Run cleanup operations periodically
-- Monitor memory usage
+### `!dosconfig`
+Displays current DoS protection configuration settings.
 
-### **3. User Education**
-- Inform users about rate limits
-- Provide clear feedback when limits are exceeded
+### `!status`
+Shows overall bot status including:
+- Guild and user counts
+- Bot latency
+- Cog status
 
-### **4. Gradual Adjustments**
-- Start with conservative limits
-- Adjust based on actual usage patterns
-- Monitor for false positives
+## 🚨 Protection Responses
 
-## Testing DoS Protection
+When protection is triggered, the bot will:
 
-### **Test Rate Limiting**
-1. Send multiple rapid messages in city-selection channel
-2. Verify rate limit messages appear
-3. Check that limits are enforced correctly
+1. **Log the incident** with user ID and details
+2. **Send a warning message** to the user (auto-deleted after 10 seconds)
+3. **Delete the triggering message** if possible
+4. **Continue normal operation** for other users
 
-### **Test Memory Management**
-1. Monitor memory usage during high activity
-2. Verify cleanup operations work correctly
-3. Check for memory leaks
+### Example Responses:
+- Rate limiting: `⏰ @user Please wait before making another request. Rate limit: 3 requests per 30 seconds.`
+- Spam detection: `🚫 @user Please slow down your messages to avoid spam detection.`
 
-### **Test Error Handling**
-1. Test with Discord API errors
-2. Verify graceful degradation
-3. Check error logging
+## 📊 Monitoring
 
-## Security Benefits
+### Log Messages
+The system logs all protection events:
+```
+WARNING: Rate limited commands for user 123456789
+WARNING: Spam detected for user 123456789: repeated message 'hello...'
+```
 
-### **1. API Rate Limit Protection**
-- Prevents Discord API rate limiting
-- Maintains bot availability
-- Reduces API costs
+### Statistics Tracking
+- Track how many users are currently rate-limited
+- Monitor spam detection effectiveness
+- Monitor memory usage of protection data
 
-### **2. Resource Protection**
-- Prevents CPU/memory exhaustion
-- Maintains bot responsiveness
-- Protects server resources
+## 🛠️ Implementation Details
 
-### **3. User Experience**
-- Prevents spam in channels
-- Maintains channel usability
-- Provides clear feedback
+### Rate Limiting Algorithm
+1. **Sliding Window**: Uses timestamps to track requests within configurable windows
+2. **Automatic Cleanup**: Removes expired timestamps to prevent memory bloat
+3. **Per-User Tracking**: Each user has independent rate limit counters
 
-### **4. System Stability**
-- Prevents infinite loops
-- Maintains role assignment accuracy
-- Protects against cascading failures
+### Spam Detection Algorithm
+1. **Content Tracking**: Stores recent messages with timestamps
+2. **Repetition Detection**: Counts identical messages within time window
+3. **Flood Detection**: Limits total messages per user per minute
+4. **Automatic Cleanup**: Removes old message data
 
-## Emergency Procedures
+### Memory Management
+1. **24-Hour Retention**: Protection data is automatically cleaned up after 24 hours
+2. **Configurable Cleanup**: Admin can trigger manual cleanup
+3. **Statistics Monitoring**: Track memory usage and active users
 
-### **If Under Attack**
-1. **Immediate Actions**:
-   - Temporarily reduce rate limits
-   - Monitor logs for attack patterns
-   - Consider temporary bot shutdown
+## 🔒 Security Best Practices
 
-2. **Investigation**:
-   - Check rate limit statistics
-   - Identify attack sources
-   - Review recent changes
+1. **Logging**: All protection events are logged for monitoring
+2. **Graceful Handling**: Bot continues operating even if protection fails
+3. **Permission Checks**: Admin commands require proper permissions
+4. **Error Handling**: Comprehensive error handling prevents crashes
+5. **Configurable Limits**: Easy to adjust protection levels as needed
 
-3. **Recovery**:
-   - Block malicious users if necessary
-   - Restore normal rate limits
-   - Monitor for repeat attacks
+## 🚀 Usage Examples
 
-### **Rate Limit Bypass Prevention**
-- Rate limits are per-user and per-action type
-- No global bypass mechanisms
-- All actions are rate limited independently
+### Adjusting Protection Levels
+```python
+# Make protection more strict
+DOS_PROTECTION["MAX_COMMANDS_PER_WINDOW"] = 2
+DOS_PROTECTION["COMMAND_RATE_LIMIT_WINDOW"] = 60
 
-## Conclusion
+# Make protection more lenient
+DOS_PROTECTION["MAX_COMMANDS_PER_WINDOW"] = 5
+DOS_PROTECTION["COMMAND_RATE_LIMIT_WINDOW"] = 15
+```
 
-The implemented DoS protection provides comprehensive defense against:
-- Message flooding attacks
-- Role assignment spam
-- Command abuse
-- Logging spam
-- Resource exhaustion
+### Monitoring Protection
+```bash
+# Check protection statistics
+!dosstats
 
-The system is configurable, monitorable, and maintains good user experience while protecting against abuse. 
+# Clean up old data
+!cleanup
+
+# View current configuration
+!dosconfig
+```
+
+## 🎯 Protection Targets
+
+This system protects against:
+
+1. **Command Spam**: Rapid command execution
+2. **Message Flooding**: Too many messages in short time
+3. **Role Abuse**: Rapid role changes
+4. **City Selection Spam**: Repeated city selection attempts
+5. **Combo Role Exploitation**: Abusing combo role logic
+6. **Memory Exhaustion**: Prevents memory leaks from protection data
+
+## 📈 Performance Impact
+
+- **Minimal Overhead**: Protection checks are fast and efficient
+- **Memory Efficient**: Automatic cleanup prevents memory bloat
+- **Scalable**: Works with any number of users
+- **Configurable**: Can be tuned for different server sizes
+
+The protection system is designed to be transparent to normal users while effectively preventing abuse and spam. 

@@ -26,6 +26,18 @@ DOS_PROTECTION = {
     # Message flood protection
     "MAX_MESSAGES_PER_MINUTE": 10,  # max messages per user per minute
     "FLOOD_WINDOW": 60,  # seconds
+    
+    # Spam detection
+    "SPAM_WINDOW": 60,  # seconds to track messages for spam detection
+    "MAX_REPEATED_MESSAGES": 3,  # max repeated identical messages
+    "MAX_MESSAGES_PER_MINUTE": 10,  # max messages per user per minute
+    
+    # Command cooldowns (in seconds)
+    "COMMAND_COOLDOWNS": {
+        "city_selection": 5,  # 5 seconds between city selections
+        "role_updates": 10,   # 10 seconds between role updates
+        "admin_commands": 30, # 30 seconds between admin commands
+    }
 }
 
 COUNTRY_ROLES = {"Israel", "USA", "Canada", "Germany", "Other"}

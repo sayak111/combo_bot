@@ -11,7 +11,7 @@ import asyncio
 
 # Import utilities
 from utils.logging_config import setup_logging, get_logger
-from utils.dos_protection import is_command_rate_limited, get_rate_limit_message
+from utils.dos_protection import is_command_rate_limited, get_rate_limit_message, is_spam_detected, get_spam_message
 
 # Setup logging
 setup_logging()
@@ -50,6 +50,22 @@ class SGeBot(commands.Bot):
     async def on_message(self, message):
         """Handle incoming messages"""
         if message.author.bot:
+            return
+
+        # Spam detection
+        if is_spam_detected(message.author.id, message.content):
+            logger.warning(f"Spam detected from {message.author} (ID: {message.author.id}): '{message.content[:50]}...'")
+            try:
+                await message.channel.send(
+                    f"🚫 {message.author.mention} {get_spam_message()}",
+                    delete_after=10
+                )
+            except discord.Forbidden:
+                logger.warning("Cannot send spam detection message to channel.")
+            try:
+                await message.delete()
+            except discord.Forbidden:
+                logger.warning("Cannot delete spam message.")
             return
 
         # DoS protection for message handling
