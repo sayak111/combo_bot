@@ -9,7 +9,7 @@ UNRECOGNIZED_CITY_CATEGORY = "City selection"
 DOS_PROTECTION = {
     # City selection rate limiting
     "CITY_SELECTION_RATE_LIMIT_WINDOW": 60,  # seconds
-    "MAX_CITY_REQUESTS_PER_WINDOW": 5,  # max requests per user per minute
+    "MAX_CITY_SELECTION_PER_WINDOW": 5,  # max requests per user per minute
     
     # Command rate limiting
     "COMMAND_RATE_LIMIT_WINDOW": 30,  # seconds
@@ -20,7 +20,7 @@ DOS_PROTECTION = {
     "MAX_ROLE_UPDATES_PER_WINDOW": 2,  # max role updates per user per 10 seconds
     
     # Combo role update rate limiting
-    "COMBO_ROLE_RATE_LIMIT_WINDOW": 30,  # seconds
+    "COMBO_ROLE_UPDATE_RATE_LIMIT_WINDOW": 30,  # seconds
     "MAX_COMBO_ROLE_UPDATES_PER_WINDOW": 3,  # max updates per user per 30 seconds
     
     # Message flood protection
